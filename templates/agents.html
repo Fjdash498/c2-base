@@ -1,0 +1,14 @@
+<html>
+	<body>
+	<h1> list of agents: </h1>
+
+	<!-- {{server_object.clients}} -->
+
+	{% for x in server_object.clients %}
+	<h2> {{ x.id  }}: <a href="http://localhost:8080/{{x.id}}/execmd">Execute</a>
+	</h2>
+	{% endfor %}
+
+
+	</body>
+</html>

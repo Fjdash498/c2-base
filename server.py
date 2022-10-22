@@ -88,6 +88,7 @@ class Connection:
 def handle_client(client, server):
     print(f"New client connected: {client.rAddr}")
     while client.frm_client != "close":
+        # print(client.to_send)
         try:
             if "upload" in client.to_send:
                 print("server has seen upload command")
@@ -177,6 +178,8 @@ def build_server():
     global s
     s = Server(IP, PORT)
     id = 1
+    global s
+    s = Server(IP, PORT)
     while True:
         try:
             sock_obj, addr = s.sock.accept()
