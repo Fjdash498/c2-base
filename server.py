@@ -1,6 +1,6 @@
 import socket
 import threading
-from flask import Flask
+from flask import Flask, render_template, redirect, request
 import datetime
 
 
@@ -178,8 +178,6 @@ def build_server():
     global s
     s = Server(IP, PORT)
     id = 1
-    global s
-    s = Server(IP, PORT)
     while True:
         try:
             sock_obj, addr = s.sock.accept()
