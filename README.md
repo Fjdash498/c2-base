@@ -6,6 +6,7 @@ TODO:
 + fix ugly web pages
 
 Instructions:
+
 1). Start 'server.py'
 
 2). Open Web server via browser (http://localhost:8080/home)
