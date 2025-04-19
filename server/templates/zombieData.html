@@ -1,0 +1,20 @@
+<html>
+	<head>
+		<title>Z0mB1eS</title>
+	<body>
+		<div class="container">
+		<h1>Data:</h1>
+		<br>
+        <h3>CMD: {{ c }}</h3>
+        <br>
+        <h3>OUTPUT:</h3>
+        {% for line in o%}
+        <p>{{ line }}</p>
+        {% endfor %}
+		{% if token %}
+		<a href=/downloads/{{z}}-{{token}}>Download</a>
+		{% endif %}
+		</div>
+        <a href="http://localhost:8080/admin/{{z}}">Return to Zombie Page</a>
+	</body>
+</html>

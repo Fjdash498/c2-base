@@ -1,14 +1,12 @@
-# c2-base
-basic python c2 server with interactive flask web front-end. Server/agent currently supports file up/download, basic system info gathering, and run OS commands.
+# Basic C2 Server in flask. 
 
-TODO:
-+ build login form and web user logic
-+ fix ugly web pages
+Basic C2 using flask. Features sqlite database, fully functioning (yet ugly) web front-end, and methods to handle tasks from zombies or admins.
 
-Instructions:
-
-1). Start 'server.py'
-
-2). Open Web server via browser (http://localhost:8080/home)
-
-3). C2 Listner will start and will now accept agent connections
+## TODO:
+    - Build out beacon to be more feature rich. 
+        - download files from server
+            - save files to disk on victim host
+    - Build out logging system to debug app while running
+        - convert all print statements to be logged based on log level
+        - configure logging level
+    - Rebuild horrendous front end
